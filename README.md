@@ -1,4 +1,0 @@
-ServerSide
-==========
-
-Server und Datenbank
