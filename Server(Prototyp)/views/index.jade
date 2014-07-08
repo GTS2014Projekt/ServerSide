@@ -1,0 +1,40 @@
+extends layout
+block content
+
+    // Wrapper
+    #wrapper
+    
+        // LIST
+        header List: Geo-Fencing with Beacons
+        #list
+            table
+                thead
+                    th MAC-Adresse
+                    th registriert
+                    th TIMESTAMP
+                    th löschen
+                tbody
+        // /LIST
+
+        // INFO
+        header Info
+        #listInfo
+            table
+                thead
+                    th Owner
+                    th Beacon
+                    th Range
+                tbody
+        // /INFO
+
+        // UPDATE DATA
+        header Update Data
+        #updateData
+            fieldset
+                input#inputMacAdress(type='text', placeholder='MAC-Adresse')
+                input#inputBeacons(type='text', placeholder='Beacons')
+                br
+                btnblue#btnUpdateData Update Data
+        // /UPDATE DATA 
+
+    // /WRAPPER
