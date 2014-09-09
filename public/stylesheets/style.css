@@ -65,12 +65,16 @@ a {
 }
 
 #wrapper {
-	padding-left:500px;
-	position:relative;
+  position:  relative;
+  top: 50%;
+  left: 50%;
+  margin-top: 0px;
+  margin-left: -200px;
 }
 
 #list {
-	margin:0 0 30px 0;
+	  margin-left: auto;
+    margin-right: auto;
 }
 	#list table {
 		border-collapse:separate;
@@ -97,7 +101,6 @@ a {
 			}
 			
 #listInfo {
-	margin:0 0 30px 0;
 }
 	#listInfo table {
 		border-collapse:separate;

@@ -8,6 +8,9 @@ $(document).ready(function() {
    
      // Button Update Data get clicked -> Update Data
      $('#btnUpdateData').on('click', update);
+     
+     // Button Get Data get clicked -> et Data
+     $('#btnGetData').on('click', get);
       
     // Link delete get clicked -> delete User
     $('#list table tbody').on('click', 'td a.linkdeleteuser', deleteUser);
@@ -20,7 +23,6 @@ $(document).ready(function() {
 
 // Fill table with data
 function populateTable() {
-
 	// Empty content string
     var tableContent = '';
     
@@ -59,6 +61,7 @@ function populateTable() {
             $('#list table tbody').html(tableContent);
            }
      });
+
 };
 
 // Update Data
@@ -129,13 +132,13 @@ function register(event){
     }).done(function( response ) {
             
 			// Check for successful (blank) response
-            if (response.msg === '') {
-			//update table
-			populateTable();
+      if (response.msg === '') {
+        //update table
+        populateTable();
 			}
 			else {
-                // If something goes wrong, alert the error message that the service returned
-                alert('Error: ' + response.msg);
+        // If something goes wrong, alert the error message that the service returned
+        alert('Error: ' + response.msg);
             }
     });
 	
@@ -144,7 +147,8 @@ function register(event){
 
 // Delete Data
 function deleteUser(event) {
-    // Prevents default HTML functions
+
+   // Prevents default HTML functions
 	event.preventDefault();
 
     // Pop up a confirmation dialog
@@ -201,9 +205,8 @@ function showbeacons(event) {
         data: reqBody,
         url: '/functions/get'
     }).done(function( response ) {
-	
 		// If no data was found show a alert
-		if (response === '') {
+		if (response.length === 0) {
             alert('Es konnten keine Daten gefunden werden!');
 		}
 		
@@ -220,5 +223,26 @@ function showbeacons(event) {
 		}
 	});
 };
+
+function get(event){
+  // Prevents default HTML functions
+  event.preventDefault();
+  
+	reqBody = {
+        'reqtyp': $('#getData fieldset input#inputReqTyp').val(),
+        'beacons': $('#getData fieldset input#inputBeacons').val()
+    }
+	
+    // Call the POST with our registration
+    $.ajax({
+        type: 'POST',
+        data: reqBody,
+        url: '/functions/get'
+    }).done(function( response ) {
+      //$('#getData fieldset input#inputReqTyp').val('');
+      //$('#getData fieldset input#inputBeacons').val('');
+      alert(response);
+	});
+}
 
 
