@@ -26,16 +26,10 @@ function populateTable() {
 	// Empty content string
     var tableContent = '';
     
-	// Send reqtyp = '0' to get all user data
-    var reqBody = {
-      'reqtyp': '0'
-     }
-     
      // Use AJAX for POST
      $.ajax({
       type: 'POST',
-      data: reqBody,
-      url: '/functions/get'
+      url: '/functions/getUser'
      }).done(function( response ) {
             
 			// If no data was found show a alert
@@ -193,9 +187,8 @@ function showbeacons(event) {
     // Empty content string
     var tableContent = '';
 		
-    // Fills the requestbody with reqtyp 1(getting all beacons seen by an macAdress) and the macAdress
+    // Fills the requestbody with macAdress
 	var reqBody = {
-        'reqtyp': '1',
         'macAdress' : $(this).attr('rel')
 	}
        
@@ -203,7 +196,7 @@ function showbeacons(event) {
     $.ajax({
         type: 'POST',
         data: reqBody,
-        url: '/functions/get'
+        url: '/functions/getBeacons'
     }).done(function( response ) {
 		// If no data was found show a alert
 		if (response.length === 0) {
@@ -228,9 +221,9 @@ function get(event){
   // Prevents default HTML functions
   event.preventDefault();
   
-	reqBody = {
-        'reqtyp': $('#getData fieldset input#inputReqTyp').val(),
-        'beacons': $('#getData fieldset input#inputBeacons').val()
+    reqBody = {
+        'beacons': $('#getData fieldset input#inputBeacons').val(),
+        'offset': $('#getData fieldset input#inputOffset').val()
     }
 	
     // Call the POST with our registration
@@ -240,7 +233,7 @@ function get(event){
         url: '/functions/get'
     }).done(function( response ) {
       //$('#getData fieldset input#inputReqTyp').val('');
-      //$('#getData fieldset input#inputBeacons').val('');
+      //$('#getData fieldset input#inputOffset').val('');
       alert(response);
 	});
 }

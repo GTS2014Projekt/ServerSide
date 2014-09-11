@@ -5,54 +5,54 @@ var debugMode = true; //En-/Disable Logs
 
 /*
 GET DATA
-This function handels all question to get something from the database
+These functions handels all question to get something from the database
  */
-router.post('/get', function(req, res) {
-	//initalise the db
+ 
+//Gives back all user with macAdress, registered and timestamp back
+ router.post('/getUser', function(req, res) {
 	var db = req.db;
+ 
+	db.collection('userlist').find().toArray(function (err, result) {
 	
-	/*Gets the requesttype for further actions
-	0 = Gives back all users
-	1 = Gives back beacons by macAdress
-	2 = Gives back all macAdresses, who sees beacon(s)
-	3 = Gives back all macAdresses, who sees beacon(s) in a specific range
-	*/
-	var reqtyp = req.body.reqtyp;
-	
-  switch (parseInt(reqtyp)) {
-  
-	//Gives back all user with macAdress, registered and timestamp back
-	//POST : reqtyp : '0'
-    case 0:
-		//FUNCTION
-		db.collection('userlist').find().toArray(function (err, result) {
+			if(debugMode)
+				console.log(result);
+			
 			res.send(result);
-		});
-    break;
-	
-	//Gives back all beacons that one user(by his macAdress) can see 
-	//POST: reqtyp : '1', macAdress : 'macAdress'
-    case 1:
-		//VARIABLES
-		thisOwner = req.body.macAdress;
+		});		
+ });
+
+//Gives back all beacons that one user(by his macAdress) can see  
+router.post('/getBeacons', function(req, res) {
+  		//VARIABLES
+		var db = req.db;
+		var thisOwner = req.body.macAdress;
 		
 		//FUNCTION
 		db.collection('beaconlist').find({ macAdressOwner : thisOwner }).toArray(function (err, result) {
+		
+			if(debugMode)
+				console.log(result);
+			
 			res.send(result);
 		});
-    break;
-    
-	
+});
+ 
+router.post('/get', function(req, res) {
+	//initalise the db
+	var db = req.db;
+
     //Get macAdress of users, who sees this beacon(s)
-	//POST: reqtyp : '2', beacons : 'macAdressBeacon1, macAdressBeacon2, ...'
-    case 2:
+	//beacons : 'macAdressBeacon1, macAdressBeacon2, ...'
+		//VARIABLES
 		var searchData = [];
 		var sortedResult = [];
 		var countResult = [];
 		var prev = {macAdressOwner : ''};
 		var beaconData = req.body.beacons.split('#');
 		var sendData = "";
+		var offset = req.body.offset;
 		
+		//FUNCTIONS
 		//counts how often which macAdress is found
 		function countResults(result){
 			for(var i=0; i<result.length; i++){
@@ -84,46 +84,23 @@ router.post('/get', function(req, res) {
 			res.send(sendData);
 		}
 		
+		if(debugMode)
+			console.log("------------Beginn eines Datensatzes---------");
+		
 		if(isNaN(beaconData[1]) && isNaN(beaconData[2])) {
 		for(var i=0; i<beaconData.length; i++){
 			searchData[i] = { 'macAdressBeacon' : beaconData[i] }
+			}
 		}		
-		
-		if(debugMode)
-			console.log("------------Beginn eines Datensatzes---------");
-		
-		db.collection('beaconlist').find( { $or: searchData } ).toArray(function (err, result) {
-			if(result != null){
-			
-			if(debugMode)
-				console.log("Result:" + JSON.stringify(result));
-			
-			countResults(result);
-			
-			if(debugMode){
-				console.log("Sorted Result: " + JSON.stringify(sortedResult));
-				console.log("Count results: " + JSON.stringify(countResult.toString()));
-			}
-			
-			sendingData(result);
-			
-			}
-			
-			if(debugMode)
-				console.log("SendData: " + sendData);
-		});
-	}
-	 //GET macAdress of users, who sees beacon(s) in a specific range
-	 //POST: reqtyp : '2', beacons : 'macAdressBeacon1, minRage1, maxRange1, macAdressBeacon2, minRage2, maxRange2'
-	 else{
-	 
-		if(debugMode)
-			console.log("------------Beginn eines Datensatzes---------");
-		
-		//Create searchData
-		for(var i=0; i<beaconData.length; i=i+3){
+		else{
+			//Create searchData
+			for(var i=0; i<beaconData.length; i=i+3){
 			searchData[i/3] = { 'macAdressBeacon' : beaconData[i], 'rangeBeacon' : { $gt :  parseFloat(beaconData[i+1]), $lt :  parseFloat(beaconData[i+2]) } }
 		}
+		}
+		
+		if(debugMode)
+			console.log("------------Beginn eines Datensatzes---------");
 		
 		if(debugMode)
 			console.log("SearchsearchData:" + JSON.stringify(searchData));
@@ -148,15 +125,7 @@ router.post('/get', function(req, res) {
 			
 			if(debugMode)
 				console.log("SendData: " + sendData);
-		});
-	}	
-    break;
-    
-   default:
-      res.send('This request is not defined!');
-	
-	}
-	 
+		});	 
 });
 
 
@@ -174,6 +143,28 @@ router.post('/update', function(req, res) {
 	//later contains all beacondata
 	var splitBeacons = [];
 	
+	//FUNCTIONS
+	function checkBeacons(){
+	//check Beacons
+	if(beacons != ''){
+		splitBeacons = beacons.split("#");
+		for(var i=0; i< splitBeacons.length; i=i+2){
+			//check macAdress Beacons
+			if(!checkMacAdress(splitBeacons[i])){
+				res.send({ msg: 'Das ist keine echte MAC-Adresse' });
+				return;
+			}
+	
+			//check range Beacons
+			if(isNaN(splitBeacons[i+1]) || splitBeacons[i+1] === null || splitBeacons[i+1] === ''){
+				res.send({ msg: 'Die Range deiner Beacons stimmt nicht' });
+				return;
+			}
+		}
+		}
+	}	
+	
+	
 	//-----------CHECK POST----------
 	//check if macAdress is real
 	if(!checkMacAdress(dataMac)){
@@ -182,25 +173,9 @@ router.post('/update', function(req, res) {
 	}
 	
 	//check Beacons
-	if(beacons != ''){
-    splitBeacons = beacons.split("#");
-    for(var i=0; i< splitBeacons.length; i=i+2){
-      //check macAdress Beacons
-      if(!checkMacAdress(splitBeacons[i])){
-        res.send({ msg: 'Das ist keine echte MAC-Adresse' });
-        return;
-      }
-	
-      //check range Beacons
-      if(isNaN(splitBeacons[i+1]) || splitBeacons[i+1] === null || splitBeacons[i+1] === ''){
-        res.send({ msg: 'Die Range deiner Beacons stimmt nicht' });
-        return;
-      }
-    }
-	}
+	checkBeacons();
 	//-----------CHECK POST----------
-	
-	//FUNCTION
+
 	//Updates or set the user
 	db.collection('userlist').update({macAdress : dataMac},{ $set:{ macAdress : dataMac, timestamp : thisTimestamp } }, {upsert: true }, function(err, result){
         res.send((err === null) ? { msg: '' } : { msg: err });
@@ -231,7 +206,7 @@ router.post('/delete', function(req, res) {
     var db = req.db;
     var dataMacAdress = req.body.macAdress;
 	
-	//FUNCTION
+	//FUNCTIONS
 	//removes all beacons that the user(macAdress) has
 	db.collection('beaconlist').remove( { macAdressOwner : dataMacAdress }, function(err, result) {
       res.send((err === null) ? { msg: '' } : { msg:'error: ' + err });
@@ -252,14 +227,14 @@ router.post('/register', function(req, res) {
 	var db = req.db;
 	var dataMacAdress = req.body.macAdress;
 	
-	//FUNCTION
+	//FUNCTIONS
 	//replace the whole entry with the new registered flag
 	db.collection('userlist').update({macAdress : dataMacAdress }, { $set: req.body}, function(err, result) {
             res.send((err === null) ? { msg: '' } : { msg:'error: ' + err });
 	});
 });
 
-
+//checls a macAdress if it's real
 function checkMacAdress(macAdress){
 	var checkMac;
 	
@@ -278,8 +253,9 @@ function checkMacAdress(macAdress){
 	return true;
 }
 
+//check if a string is hex
 function isHex(string)
- {
+{
     if (string.length!=2) return false;
     for (i=0; i<2; i++)
     {
@@ -288,6 +264,7 @@ function isHex(string)
     }
     return true;
 }
+
 
 
 module.exports = router;
