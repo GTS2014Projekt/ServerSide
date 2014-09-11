@@ -1,6 +1,8 @@
 var express = require('express');
 var router = express.Router();
 
+var debugMode = true; //En-/Disable Logs
+
 /*
 GET DATA
 This function handels all question to get something from the database
@@ -40,113 +42,120 @@ router.post('/get', function(req, res) {
 		});
     break;
     
-    //Request from house control
-    //POST: reqtyp : '2', beacons : 'macAdressBeacon1, macAdressBeacon2, ...
-    //or beacons : 'macAdressBeacon1, minRage1, maxRange1, macAdressBeacon2, minRage2, maxRange2', ...
+	
+    //Get macAdress of users, who sees this beacon(s)
+	//POST: reqtyp : '2', beacons : 'macAdressBeacon1, macAdressBeacon2, ...'
     case 2:
-    var searchData = [];
-		var help = [];
-		var helpp = [];
+		var searchData = [];
+		var sortedResult = [];
+		var countResult = [];
 		var prev = {macAdressOwner : ''};
-		var boolHelp = false;
 		var beaconData = req.body.beacons.split('#');
 		var sendData = "";
-    
-    
-    var callback = function(error, results) {
-      if(error) 
-        console.log(error);
-      else {
-        console.log(results);
-        console.log(results[0]['timestamp']);
-      }
-    };
-    
-    if(isNaN(beaconData[1]) && isNaN(beaconData[2])) {
-    for(var i=0; i<beaconData.length; i++) {
-			searchData[i] = { 'macAdressBeacon' : beaconData[i] }
+		
+		//counts how often which macAdress is found
+		function countResults(result){
+			for(var i=0; i<result.length; i++){
+				if(result[i].macAdressOwner !== prev.macAdressOwner){
+					sortedResult.push(result[i]);	
+					countResult.push(1);
+				}
+				else{
+					countResult[countResult.length-1]++;
+				}
+				prev = result[i];
+			}
 		}
-		db.collection('beaconlist').find( { $or: searchData } ).toArray(function (err, result) {
+		
+		//Creates the data to send and also send it
+		function sendingData(result){
+			//if macAdress counted = all beacons ask for => users see all beacons 
 			for(var i=0; i<result.length; i++){
-				if(result[i].macAdressOwner !== prev.macAdressOwner){
-				help.push(result[i]);	
-				helpp.push(1);
-				}
-				else{
-					helpp[helpp.length-1]++;
-				}
-				prev = result[i];
-			}
-			for(var i=0; i<result.length; i++){
-				if(helpp[i] === searchData.length){
+				if(countResult[i] === searchData.length){
 					if( sendData != '' && i<result.length){
 					sendData += "#";
 					}
-					sendData += help[i].macAdressOwner;
-					//TIMESTAMP
-				}
-			}
-			res.send(sendData);
-		});
-    }
-    //Get macAdress of users, who sees this beacon(s)
-    else {
-      for(var i=0; i<beaconData.length; i=i+3){
-        searchData[i/3] = { 'macAdressBeacon' : beaconData[i], 'rangeBeacon' : { $gt :  parseFloat(beaconData[i+1]), $lt :  parseFloat(beaconData[i+2]) } }
-      }
-      console.log(searchData);
-      var documents = db.collection('beaconlist').find( { $or: searchData  } ).toArray(function(error, results) {
-          if(error)
-            console.log(error);
-          else {
-            console.log(results);
-            console.log(results[0]['macAdressOwner']);
-            db.collection('userlist').find( { macAdress : results[0]['macAdressOwner'] } ).toArray(callback);
-          }
-      });
-		/*function (err, result) {
-			if(result != null){
-			for(var i=0; i<result.length; i++){
-				if(result[i].macAdressOwner !== prev.macAdressOwner){
-				help.push(result[i]);	
-				helpp.push(1);
-				}
-				else{
-					helpp[helpp.length-1]++;
-				}
-				prev = result[i];
-			}
-			for(var i=0; i<result.length; i++){
-				if(helpp[i] === searchData.length){
-					if( sendData != '' && i<result.length){
-					sendData += "#";
-					}
-					sendData += help[i].macAdressOwner;
-					}
-					//TIMESTAMP
-					
-					var myCursor = db.collection('userlist').find( { macAdress : help[i].macAdressOwner } );
-					console.log("Cursor");
-					console.log(myCursor);
-					while (myCursor.hasNext()) {
-            printjson(myCursor.next());
-          }/*.toArray(function (err, result) {
-					
-					console.log(result[0].timestamp);
-					sendData += '#' + result[0].timestamp;
-					}
+					sendData += sortedResult[i].macAdressOwner;
+					db.collection('userlist').find( { macAdress : sortedResult[i].macAdressOwner } ).toArray(function (err, result) {
 					});
 				}
 			}
+			
 			res.send(sendData);
-		});*/
-    }
+		}
+		
+		if(isNaN(beaconData[1]) && isNaN(beaconData[2])) {
+		for(var i=0; i<beaconData.length; i++){
+			searchData[i] = { 'macAdressBeacon' : beaconData[i] }
+		}		
+		
+		if(debugMode)
+			console.log("------------Beginn eines Datensatzes---------");
+		
+		db.collection('beaconlist').find( { $or: searchData } ).toArray(function (err, result) {
+			if(result != null){
+			
+			if(debugMode)
+				console.log("Result:" + JSON.stringify(result));
+			
+			countResults(result);
+			
+			if(debugMode){
+				console.log("Sorted Result: " + JSON.stringify(sortedResult));
+				console.log("Count results: " + JSON.stringify(countResult.toString()));
+			}
+			
+			sendingData(result);
+			
+			}
+			
+			if(debugMode)
+				console.log("SendData: " + sendData);
+		});
+	}
+	 //GET macAdress of users, who sees beacon(s) in a specific range
+	 //POST: reqtyp : '2', beacons : 'macAdressBeacon1, minRage1, maxRange1, macAdressBeacon2, minRage2, maxRange2'
+	 else{
+	 
+		if(debugMode)
+			console.log("------------Beginn eines Datensatzes---------");
+		
+		//Create searchData
+		for(var i=0; i<beaconData.length; i=i+3){
+			searchData[i/3] = { 'macAdressBeacon' : beaconData[i], 'rangeBeacon' : { $gt :  parseFloat(beaconData[i+1]), $lt :  parseFloat(beaconData[i+2]) } }
+		}
+		
+		if(debugMode)
+			console.log("SearchsearchData:" + JSON.stringify(searchData));
+			
+		//search macAdresses of the owners(phones)
+		db.collection('beaconlist').find( { $or: searchData  } ).toArray(function (err, result) {
+			if(result != null){
+			
+			if(debugMode)
+				console.log("Result:" + JSON.stringify(result));
+			
+			countResults(result);
+			
+			if(debugMode){
+				console.log("Sorted Result: " + JSON.stringify(sortedResult));
+				console.log("Count results: " + JSON.stringify(countResult.toString()));
+			}
+			
+			sendingData(result);
+			
+			}
+			
+			if(debugMode)
+				console.log("SendData: " + sendData);
+		});
+	}	
     break;
     
    default:
       res.send('This request is not defined!');
 	
-  }
+	}
 	 
 });
 
@@ -164,7 +173,7 @@ router.post('/update', function(req, res) {
 	var beacons	= req.body.beacons;
 	//later contains all beacondata
 	var splitBeacons = [];
-	console.log(req.body);
+	
 	//-----------CHECK POST----------
 	//check if macAdress is real
 	if(!checkMacAdress(dataMac)){
@@ -279,16 +288,6 @@ function isHex(string)
     }
     return true;
 }
-
-function clone(obj) {
-    if (null == obj || "object" != typeof obj) return obj;
-    var copy = obj.constructor();
-    for (var attr in obj) {
-        if (obj.hasOwnProperty(attr)) copy[attr] = obj[attr];
-    }
-    return copy;
- }
-
 
 
 module.exports = router;
