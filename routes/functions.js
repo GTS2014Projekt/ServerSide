@@ -45,6 +45,7 @@ router.post('/get', function(req, res) {
 	//beacons : 'macAdressBeacon1, macAdressBeacon2, ...'
 		//VARIABLES
 		var searchData = [];
+		var newSearchData = [];
 		var sortedResult = [];
 		var countResult = [];
 		var prev = {macAdressOwner : ''};
@@ -68,7 +69,34 @@ router.post('/get', function(req, res) {
 		}
 		
 		//Creates the data to send and also send it
-		function sendingData(result){
+		function createSearchData(result){
+			//if macAdress counted = all beacons ask for => users see all beacons 
+			for(var i=0; i<result.length; i++){
+				if(countResult[i] === searchData.length){
+					newSearchData.push( { 'macAdress' : sortedResult[i].macAdressOwner } );
+				}
+			}
+		}
+		
+		function checkTimestamp(result){
+			for(var i=0; i<result.length; i++){
+				if(offset * 1000 >= (Date.now() - result[i].timestamp)){
+						console.log("IF");
+						//if( sendData != '' && i<result.length){
+						sendData += "#";
+						//}
+						sendData += newSearchData[i].macAdress;
+				}
+			}
+			console.log("sendData:" + sendData);
+			
+		}
+		
+		function sendingData(){
+		res.send(sendData);
+		}
+		
+		function createSendData(result){
 			//if macAdress counted = all beacons ask for => users see all beacons 
 			for(var i=0; i<result.length; i++){
 				if(countResult[i] === searchData.length){
@@ -80,8 +108,6 @@ router.post('/get', function(req, res) {
 					});
 				}
 			}
-			
-			res.send(sendData);
 		}
 		
 		if(debugMode)
@@ -100,9 +126,6 @@ router.post('/get', function(req, res) {
 		}
 		
 		if(debugMode)
-			console.log("------------Beginn eines Datensatzes---------");
-		
-		if(debugMode)
 			console.log("SearchsearchData:" + JSON.stringify(searchData));
 			
 		//search macAdresses of the owners(phones)
@@ -119,12 +142,21 @@ router.post('/get', function(req, res) {
 				console.log("Count results: " + JSON.stringify(countResult.toString()));
 			}
 			
-			sendingData(result);
-			
-			}
+			createSearchData(result);
 			
 			if(debugMode)
-				console.log("SendData: " + sendData);
+				console.log("newSearchData: " + JSON.stringify(newSearchData));
+			
+			db.collection('userlist').find( { $or: newSearchData } ).toArray(function (err, results){
+				if(results != null){
+				if(debugMode)
+					console.log("Result: " + JSON.stringify(results));
+				
+				checkTimestamp(results);
+				}
+				res.send(sendData);
+			});
+			}
 		});	 
 });
 
