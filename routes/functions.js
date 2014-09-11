@@ -81,35 +81,16 @@ router.post('/get', function(req, res) {
 		function checkTimestamp(result){
 			for(var i=0; i<result.length; i++){
 				if(offset * 1000 >= (Date.now() - result[i].timestamp)){
-						console.log("IF");
-						//if( sendData != '' && i<result.length){
+						if( sendData != '' && i<result.length){
 						sendData += "#";
-						//}
+						}
 						sendData += newSearchData[i].macAdress;
 				}
 			}
 			console.log("sendData:" + sendData);
 			
 		}
-		
-		function sendingData(){
-		res.send(sendData);
-		}
-		
-		function createSendData(result){
-			//if macAdress counted = all beacons ask for => users see all beacons 
-			for(var i=0; i<result.length; i++){
-				if(countResult[i] === searchData.length){
-					if( sendData != '' && i<result.length){
-					sendData += "#";
-					}
-					sendData += sortedResult[i].macAdressOwner;
-					db.collection('userlist').find( { macAdress : sortedResult[i].macAdressOwner } ).toArray(function (err, result) {
-					});
-				}
-			}
-		}
-		
+
 		if(debugMode)
 			console.log("------------Beginn eines Datensatzes---------");
 		
