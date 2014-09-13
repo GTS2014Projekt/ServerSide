@@ -80,7 +80,7 @@ router.post('/get', function(req, res) {
 		
 		function checkTimestamp(result){
 			for(var i=0; i<result.length; i++){
-				if(offset * 1000 >= (Date.now() - result[i].timestamp)){
+				if(offset * 1000 >= (Date.now() - result[i].timestamp || offset == 0 || offset == null)){
 						if( sendData != '' && i<result.length){
 						sendData += "#";
 						}
@@ -114,7 +114,7 @@ router.post('/get', function(req, res) {
 
 		
 		if(debugMode)
-			console.log("SearchsearchData:" + JSON.stringify(searchData));
+			console.log("SearchData:" + JSON.stringify(searchData));
 			
 		//search macAdresses of the owners(phones)
 		db.collection('beaconlist').find( { $or: searchData  } ).toArray(function (err, result) {
@@ -195,7 +195,13 @@ router.post('/update', function(req, res) {
 	//check Beacons
 	checkBeacons();
 	//-----------CHECK POST----------
-
+	
+	if(debugMode){
+		console.log("---------------Update Data---------");
+		console.log(JSON.stringify(req.body));
+	}
+	
+	
 	//Updates or set the user
 	db.collection('userlist').update({macAdress : dataMac},{ $set:{ macAdress : dataMac, timestamp : thisTimestamp } }, {upsert: true }, function(err, result){
         res.send((err === null) ? { msg: '' } : { msg: err });
@@ -203,8 +209,6 @@ router.post('/update', function(req, res) {
     
 	//removes all beacons of this user(by macAdress)
     db.collection('beaconlist').remove( { macAdressOwner : dataMac }, function(err, result) {
-    });
-   
 	//checks if the user see beacons
 	if(beacons != ''){
 		//puts in all beacons with range
@@ -214,6 +218,7 @@ router.post('/update', function(req, res) {
 				});
 		}
    }
+    });
    
 });
 
@@ -225,6 +230,11 @@ router.post('/delete', function(req, res) {
 	//VARIABLES
     var db = req.db;
     var dataMacAdress = req.body.macAdress;
+	
+	if(debugMode){
+		console.log("---------------Delete User---------");
+		console.log(JSON.stringify(req.body));
+	}
 	
 	//FUNCTIONS
 	//removes all beacons that the user(macAdress) has
@@ -249,12 +259,17 @@ router.post('/register', function(req, res) {
 	
 	//FUNCTIONS
 	//replace the whole entry with the new registered flag
+	if(debugMode){
+		console.log("---------------Register User---------");
+		console.log(JSON.stringify(req.body));
+	}
+	
 	db.collection('userlist').update({macAdress : dataMacAdress }, { $set: req.body}, function(err, result) {
             res.send((err === null) ? { msg: '' } : { msg:'error: ' + err });
 	});
 });
 
-//checls a macAdress if it's real
+//checks a macAdress if it's real
 function checkMacAdress(macAdress){
 	var checkMac;
 	
