@@ -94,17 +94,24 @@ router.post('/get', function(req, res) {
 		if(debugMode)
 			console.log("------------Beginn eines Datensatzes---------");
 		
-		if(isNaN(beaconData[1]) && isNaN(beaconData[2])) {
-		for(var i=0; i<beaconData.length; i++){
-			searchData[i] = { 'macAdressBeacon' : beaconData[i] }
+		for(var i=0; i<beaconData.length; i=i){
+			if(!isNaN(beaconData[i+1])) {
+				 if(!isNaN(beaconData[i+2])){
+					searchData.push({ 'macAdressBeacon' : beaconData[i], 'rangeBeacon' : { $gt :  parseFloat(beaconData[i+1]), $lt :  parseFloat(beaconData[i+2]) } });
+					i=i+3;
+				 }
+				 else{
+					searchData.push({ 'macAdressBeacon' : beaconData[i], 'rangeBeacon' : parseFloat(beaconData[i+1]) });
+				 	i=i+2;
+				 }
+				
+			}
+			else{
+				searchData.push({ 'macAdressBeacon' : beaconData[i] });
+				i++;
 			}
 		}		
-		else{
-			//Create searchData
-			for(var i=0; i<beaconData.length; i=i+3){
-			searchData[i/3] = { 'macAdressBeacon' : beaconData[i], 'rangeBeacon' : { $gt :  parseFloat(beaconData[i+1]), $lt :  parseFloat(beaconData[i+2]) } }
-		}
-		}
+
 		
 		if(debugMode)
 			console.log("SearchsearchData:" + JSON.stringify(searchData));
