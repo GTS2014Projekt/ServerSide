@@ -1,6 +1,6 @@
 body {
   padding: 30px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  font: 14px Arial, sans-serif;
 }
 
 btnblue {
@@ -49,10 +49,6 @@ btnblue:active {
 	top:1px;
 }
 
-h2 {
-	margin:0 0 .5em 0;
-}
-
 header{
 	 font: 30px Arial, sans-serif;
 	 color: #3f74b5;
@@ -60,20 +56,16 @@ header{
 	 text-shadow:3px 3px 5px #DEDEDE;
 }
 
-a {
-  color: #00B7FF;
-}
-
 #wrapper {
-  position:  relative;
-  top: 50%;
+  position:  fixed;
+  top: 1%;
   left: 50%;
   margin-top: 0px;
-  margin-left: -200px;
+  margin-left: -250px;
 }
 
 #list {
-	  margin-left: auto;
+	margin-left: auto;
     margin-right: auto;
 }
 	#list table {
@@ -120,14 +112,11 @@ a {
 			border-collapse:collapse;
 			border-spacing:0px;
 		}
-			#listInfo table td {
-				background:#F7F7F7;
-				padding:5px 10px;
-				text-align:center;
-			}
-			
-
-
+		#listInfo table td {
+			background:#F7F7F7;
+			padding:5px 10px;
+			text-align:center;
+		}
 
 fieldset {
 	border:0;
