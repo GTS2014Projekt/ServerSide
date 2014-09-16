@@ -11,12 +11,16 @@ $(document).ready(function() {
      
      // Button Get Data get clicked -> et Data
      $('#btnGetData').on('click', get);
+	 
+	 $('#btnUpdateUser').on('click', updateUser);
       
     // Link delete get clicked -> delete User
     $('#list table tbody').on('click', 'td a.linkdeleteuser', deleteUser);
 
 	//Link register get clicked -> change register status
 	$('#list table tbody').on('click', 'td a.linkregister', register);
+	
+	
 });
 
 // FUNCTIONS
@@ -43,6 +47,7 @@ function populateTable() {
               tableContent += '<tr>';
 			  //MAC-Adress has the function to show all beacons seen by this macAdress, therefore it sends on clicking its macAdress
               tableContent += '<td><a href="#" class="linkshowbeacons" rel="' + this.macAdress + '" title="Zeigt Beacons vom Nutzer">' + this.macAdress + '</td>';
+			  tableContent += '<td>' + this.user + '</td>';
 			  // The registerdata sends when clicked it's status and macAdress
               tableContent += '<td><a href="#" class="linkregister" rel="' + this.macAdress + "#" + this.registered + '">' + this.registered + '</a></td>';
               tableContent += '<td>' + this.timestamp + '</td>';
@@ -221,9 +226,10 @@ function get(event){
   // Prevents default HTML functions
   event.preventDefault();
   
-    reqBody = {
+    var reqBody = {
         'beacons': $('#getData fieldset input#inputBeacons').val(),
-        'offset': $('#getData fieldset input#inputOffset').val()
+        'offset': $('#getData fieldset input#inputOffset').val(),
+		'registered': $('#getData fieldset input#inputRegistered').val()
     }
 	
     // Call the POST with our registration
@@ -238,4 +244,35 @@ function get(event){
 	});
 }
 
+function updateUser(event){
+	// Prevents default HTML functions
+	event.preventDefault();
+	
+	var reqBody = {
+		'macAdress' : $('#updateUser fieldset input#inputMacAdress').val(),
+		'user' : $('#updateUser fieldset input#inputUser').val()
+	}
+	
+    // Call the POST with our registration
+    $.ajax({
+        type: 'POST',
+        data: reqBody,
+		url: '/functions/updateUser'
+	}).done(function( response ) {	
+            // Check for successful (blank) response
+            if (response.msg === '') {
+			
+				// Clear the form inputs
+                $('#updateUser fieldset input#inputMacAdress').val('');
+				$('#updateUser fieldset input#inputUser').val('');
+                // Update the table
+                populateTable();
+            }
+            else {
+                // If something goes wrong, alert the error message that the service returned
+                alert('Error: ' + response.msg);
+            }
+	});
+	
+}
 

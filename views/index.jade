@@ -10,11 +10,21 @@ block content
             table
                 thead
                     th MAC-Adresse
+                    th Benuzter
                     th registriert
                     th TIMESTAMP
                     th löschen
                 tbody
         // /LIST
+
+        // UPDATE USER
+        header Benutzernamen setzen
+        #updateUser
+            fieldset
+                input#inputMacAdress(type='text', placeholder='AA:AA:AA:AA:AA:AA')
+                input#inputUser(type='text', placeholder='Benutzernamen')
+                btnblue#btnUpdateUser Senden
+        // / UPDATE USER
 
         // INFO
         header Info
@@ -23,7 +33,7 @@ block content
                 thead
                     th Owner
                     th Beacon
-                    th Range
+                    th Range(m)
                 tbody
         // /INFO
 
@@ -34,7 +44,7 @@ block content
                 input#inputMacAdress(type='text', placeholder='MAC-Adresse')
                 input#inputBeacons(type='text', placeholder='Beacons')
                 br
-                btnblue#btnUpdateData Update Data
+                btnblue#btnUpdateData Daten senden
         // /UPDATE DATA 
         
         // GET DATA
@@ -43,8 +53,9 @@ block content
             fieldset
                 input#inputBeacons(type='text', placeholder='Beacons#Range')
                 input#inputOffset(type='text', placeholder='offset')
+                input#inputRegistered(type='text', placeholder='0/1')
                 br
-                btnblue#btnGetData Get Data
+                btnblue#btnGetData Daten holen
         // /Get DATA 
 
     // /WRAPPER

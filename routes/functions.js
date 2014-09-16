@@ -44,15 +44,27 @@ router.post('/get', function(req, res) {
     //Get macAdress of users, who sees this beacon(s)
 	//beacons : 'macAdressBeacon1, macAdressBeacon2, ...'
 		//VARIABLES
+		//holds the formated data, that is searched for
 		var searchData = [];
+		
 		var newSearchData = [];
+		
 		var sortedResult = [];
 		var countResult = [];
-		var prev = {macAdressOwner : ''};
-		var beaconData = req.body.beacons.split('#');
-		var sendData = "";
-		var offset = req.body.offset;
 		
+		var prev = {macAdressOwner : ''};
+		//holds the sended data from the user(find request)
+		var beaconData = req.body.beacons.split('#');
+		//holds the sending data
+		var sendData = "";
+		//describes the offset a timestamp can have to now(in seconds)
+		var offset = req.body.offset;
+		//status of the user; 0 = unregistered; 1 = registered
+		var registered = req.body.registered;
+		if(debugMode){
+			console.log("Registered: " + registered);
+			console.log("Offset: " + offset);
+		}
 		//FUNCTIONS
 		//counts how often which macAdress is found
 		function countResults(result){
@@ -80,20 +92,24 @@ router.post('/get', function(req, res) {
 		
 		function checkTimestamp(result){
 			for(var i=0; i<result.length; i++){
-				if(offset * 1000 >= (Date.now() - result[i].timestamp || offset == 0 || offset == null)){
+				if(offset * 1000 >= (Date.now() - result[i].timestamp) || offset == 0 || offset == null || offset == ''){
+					if(registered == result[i].registered || registered == null || registered == ''){
 						if( sendData != '' && i<result.length){
-						sendData += "#";
+							sendData += "#";
 						}
 						sendData += newSearchData[i].macAdress;
+					}
 				}
 			}
-			console.log("sendData:" + sendData);
+			if(debugMode)
+				console.log("sendData:" + sendData);
 			
 		}
 
 		if(debugMode)
 			console.log("------------Beginn eines Datensatzes---------");
 		
+		//creates the searchData
 		for(var i=0; i<beaconData.length; i=i){
 			if(!isNaN(beaconData[i+1])) {
 				 if(!isNaN(beaconData[i+2])){
@@ -116,34 +132,35 @@ router.post('/get', function(req, res) {
 		if(debugMode)
 			console.log("SearchData:" + JSON.stringify(searchData));
 			
-		//search macAdresses of the owners(phones)
+		//searchs for macAdresses of the owners(phones)
 		db.collection('beaconlist').find( { $or: searchData  } ).toArray(function (err, result) {
 			if(result != null){
 			
-			if(debugMode)
-				console.log("Result:" + JSON.stringify(result));
-			
-			countResults(result);
-			
-			if(debugMode){
-				console.log("Sorted Result: " + JSON.stringify(sortedResult));
-				console.log("Count results: " + JSON.stringify(countResult.toString()));
-			}
-			
-			createSearchData(result);
-			
-			if(debugMode)
-				console.log("newSearchData: " + JSON.stringify(newSearchData));
-			
-			db.collection('userlist').find( { $or: newSearchData } ).toArray(function (err, results){
-				if(results != null){
 				if(debugMode)
-					console.log("Result: " + JSON.stringify(results));
-				
-				checkTimestamp(results);
+					console.log("Result:" + JSON.stringify(result));
+			
+				countResults(result);
+			
+				if(debugMode){
+					console.log("Sorted Result: " + JSON.stringify(sortedResult));
+					console.log("Count results: " + JSON.stringify(countResult.toString()));
 				}
-				res.send(sendData);
-			});
+				
+				createSearchData(result);
+			
+				if(debugMode)
+					console.log("newSearchData: " + JSON.stringify(newSearchData));
+			
+				db.collection('userlist').find( { $or: newSearchData } ).toArray(function (err, results){
+				
+					if(results != null){
+						if(debugMode)
+							console.log("Result: " + JSON.stringify(results));
+				
+						checkTimestamp(results);
+					}
+					res.send(sendData);
+				});
 			}
 		});	 
 });
@@ -168,6 +185,10 @@ router.post('/update', function(req, res) {
 	//check Beacons
 	if(beacons != ''){
 		splitBeacons = beacons.split("#");
+		//rounds range to 2 decimal places
+		for(var i = 0; i< splitBeacons.length-1; i=i+1){
+			splitBeacons[i+1] = Math.round(parseFloat(splitBeacons[i+1])*100)/100;
+		}
 		for(var i=0; i< splitBeacons.length; i=i+2){
 			//check macAdress Beacons
 			if(!checkMacAdress(splitBeacons[i])){
@@ -264,6 +285,20 @@ router.post('/register', function(req, res) {
 		console.log(JSON.stringify(req.body));
 	}
 	
+	db.collection('userlist').update({macAdress : dataMacAdress }, { $set: req.body}, function(err, result) {
+            res.send((err === null) ? { msg: '' } : { msg:'error: ' + err });
+	});
+});
+
+router.post('/updateUser', function(req, res) {
+	//VARIABLES
+	var db = req.db;
+	var dataMacAdress = req.body.macAdress;
+	//FUNCTIONS
+		if(debugMode){
+		console.log("---------------Update User---------");
+		console.log(JSON.stringify(req.body));
+	}
 	db.collection('userlist').update({macAdress : dataMacAdress }, { $set: req.body}, function(err, result) {
             res.send((err === null) ? { msg: '' } : { msg:'error: ' + err });
 	});
