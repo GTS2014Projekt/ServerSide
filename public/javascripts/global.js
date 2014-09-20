@@ -1,25 +1,26 @@
 // DOM READY
 $(document).ready(function() {
-    // Populate the user table on initial page load
+    
+	// Populate the user table on initial page load
     populateTable();
     
-     // MAC-Adress get clicked -> Show Beacons
-    $('#list table tbody').on('click', 'td a.linkshowbeacons', showbeacons);
-   
-     // Button Update Data get clicked -> Update Data
-     $('#btnUpdateData').on('click', update);
-     
-     // Button Get Data get clicked -> et Data
-     $('#btnGetData').on('click', get);
-	 
-	 $('#btnUpdateUser').on('click', updateUser);
-      
-    // Link delete get clicked -> delete User
+	// Link delete get clicked -> delete user and his beacons
     $('#list table tbody').on('click', 'td a.linkdeleteuser', deleteUser);
 
-	//Link register get clicked -> change register status
-	$('#list table tbody').on('click', 'td a.linkregister', register);
+	//Link status get clicked -> change status status
+	$('#list table tbody').on('click', 'td a.linkstatus', status);
 	
+    // MAC-Adress get clicked -> show beacons of this user
+    $('#list table tbody').on('click', 'td a.linkshowbeacons', showbeacons);
+   
+   	// Button "update username" -> updates the username  
+	$('#btnUpdateUser').on('click', updateUser);
+   
+    // Button "update data" get clicked -> send data to database
+	$('#btnUpdateData').on('click', update);
+     
+    // Button "get data" get clicked -> initiate the search
+    $('#btnGetData').on('click', get);
 	
 });
 
@@ -31,36 +32,40 @@ function populateTable() {
     var tableContent = '';
     
      // Use AJAX for POST
-     $.ajax({
-      type: 'POST',
-      url: '/functions/getUser'
-     }).done(function( response ) {
+    $.ajax({
+		type: 'POST',
+		url: '/functions/getUser'
+    }).done(function( response ) {
             
-			// If no data was found show a alert
-			if (response === '') {
-              alert('Es konnten keine Daten gefunden werden!');
-            }
+		// If no data was found show a alert
+		if (response === '') {
+			alert('Es konnten keine Daten gefunden werden!');
+        }
 			
-			// If data was found, place it in the table
-            else{  
-            $.each(response, function(){
-              tableContent += '<tr>';
-			  //MAC-Adress has the function to show all beacons seen by this macAdress, therefore it sends on clicking its macAdress
-              tableContent += '<td><a href="#" class="linkshowbeacons" rel="' + this.macAdress + '" title="Zeigt Beacons vom Nutzer">' + this.macAdress + '</td>';
-			  tableContent += '<td>' + this.user + '</td>';
-			  // The registerdata sends when clicked it's status and macAdress
-              tableContent += '<td><a href="#" class="linkregister" rel="' + this.macAdress + "#" + this.registered + '">' + this.registered + '</a></td>';
-              tableContent += '<td>' + this.timestamp + '</td>';
-			  //the delete function sends the macAdress when clicked
-              tableContent += '<td><a href="#" class="linkdeleteuser" rel="' + this.macAdress + '">delete</a></td>';
-              tableContent += '</tr>';
-            });
+		// If data was found, place it in the HTML table
+        else{  
+			$.each(response, function(){
+				tableContent += '<tr>';
+			
+				//MAC-Adress has the function to show all beacons seen by this macAdress, therefore it sends on clicking its macAdress
+				tableContent += '<td><a href="#" class="linkshowbeacons" rel="' + this.macAdress + '" title="Zeigt Beacons vom Nutzer">' + this.macAdress + '</td>';
+
+				tableContent += '<td>' + this.user + '</td>';
+			
+				// The status sends when clicked it's status and macAdress
+				tableContent += '<td><a href="#" class="linkstatus" rel="' + this.macAdress + "#" + this.status + '">' + this.status + '</a></td>';
+              
+				tableContent += '<td>' + this.timestamp + '</td>';
+			  
+				//the delete function sends the macAdress when clicked
+				tableContent += '<td><a href="#" class="linkdeleteuser" rel="' + this.macAdress + '">delete</a></td>';
+				tableContent += '</tr>';
+			});
 			
             // Inject content string into HTML table
             $('#list table tbody').html(tableContent);
-           }
-     });
-
+        }
+    });
 };
 
 // Update Data
@@ -74,7 +79,7 @@ function update(event) {
             'beacons' : $('#updateData fieldset input#inputBeacons').val()
         }
 
-        // Use AJAX to post the object to our add service
+        // Use AJAX to post
         $.ajax({
             type: 'POST',
             data: reqBody,
@@ -91,62 +96,62 @@ function update(event) {
                 // Update the table
                 populateTable();
             }
+			
+			// If something goes wrong, alert the error message that the service returned
             else {
-                // If something goes wrong, alert the error message that the service returned
                 alert('Error: ' + response.msg);
             }
         });
 };
 
-//Change the status of registration
-function register(event){
+//Change the status of the user
+function status(event){
 	// Prevents default HTML functions
 	event.preventDefault();
 	
 	//VARIABLES
-	//Splits up the send data in macAdress and registered
+	//Splits up the send data in macAdress and status
 	var data = $(this).attr('rel').split('#');
-	var registered;
+	//new status of the user
+	var status;
 		
 	//FUNCTION	
-    // If registered = 1 set it on 0 else set it on 1
+    // If status = 1 set it on 0 else set it on 1
 	if(data[1] === '1'){
-        registered = 0;
+        status = 0;
     }
     else{
-         registered = 1;
+         status = 1;
     }
         
-    //Fills requestbody with macAdress and registered
+    //Fills requestbody with macAdress and status
 	reqBody = {
         'macAdress': data[0],
-        'registered': registered
+        'status': status
     }
 	
-    // Call the POST with our registration
+    // Use AJAX to post
     $.ajax({
         type: 'POST',
 		data: reqBody,
-        url: '/functions/register'
+        url: '/functions/status'
     }).done(function( response ) {
             
-			// Check for successful (blank) response
-      if (response.msg === '') {
-        //update table
-        populateTable();
-			}
-			else {
-        // If something goes wrong, alert the error message that the service returned
-        alert('Error: ' + response.msg);
-            }
+		// Check for successful (blank) response
+		if (response.msg === '') {
+			//update table
+			populateTable();
+		}
+		
+		// If something goes wrong, alert the error message that the service returned	
+		else {
+			alert('Error: ' + response.msg);
+         }
     });
-	
-
 };
 
 // Delete Data
 function deleteUser(event) {
-
    // Prevents default HTML functions
 	event.preventDefault();
 
@@ -155,12 +160,12 @@ function deleteUser(event) {
 
     // Check and make sure the user confirmed
     if (confirmation === true) {
-		// Fills the requestbody with the macAdress
+		// Fills the requestbody with macAdress
 		var reqBody = {
             'macAdress': $(this).attr('rel')
         }
 		
-        // Call the POST with our newData
+		// Use AJAX to post
         $.ajax({
             type: 'POST',
             data: reqBody,
@@ -168,23 +173,24 @@ function deleteUser(event) {
         }).done(function( response ) {
 			// Check for successful (blank) response
             if (response.msg === '') {
-			//update table
-			populateTable();
+				//update table
+				populateTable();
 			}
+			
+            // If something goes wrong, alert the error message that the service returned			
 			else {
-                // If something goes wrong, alert the error message that the service returned
                 alert('Error: ' + response.msg);
             }
         });
-
     }
-    else {
-        // If they said no to the confirm, do nothing
+     
+	// If they said no to the confirm, do nothing
+	else {
         return false;
     }
 };
 
-// Show Beacons of the user send
+// Show Beacons of the user
 function showbeacons(event) {
     // Prevents default HTML functions
     event.preventDefault();
@@ -197,7 +203,7 @@ function showbeacons(event) {
         'macAdress' : $(this).attr('rel')
 	}
        
-        // Use AJAX for POST
+    // Use AJAX for POST
     $.ajax({
         type: 'POST',
         data: reqBody,
@@ -208,7 +214,7 @@ function showbeacons(event) {
             alert('Es konnten keine Daten gefunden werden!');
 		}
 		
-		// If data was found, place it in the table
+		// If data was found, place it in the HTML table
 		else{  	
 			$.each(response, function(){
 				tableContent += '<tr>';
@@ -222,28 +228,29 @@ function showbeacons(event) {
 	});
 };
 
+//searchs for user that sees macAdress
 function get(event){
-  // Prevents default HTML functions
-  event.preventDefault();
+	// Prevents default HTML functions
+	event.preventDefault();
   
     var reqBody = {
         'beacons': $('#getData fieldset input#inputBeacons').val(),
         'offset': $('#getData fieldset input#inputOffset').val(),
-		'registered': $('#getData fieldset input#inputRegistered').val()
+		'status': $('#getData fieldset input#inputStatus').val()
     }
 	
-    // Call the POST with our registration
+    // Use AJAX for POST
     $.ajax({
         type: 'POST',
         data: reqBody,
         url: '/functions/get'
     }).done(function( response ) {
-      //$('#getData fieldset input#inputReqTyp').val('');
-      //$('#getData fieldset input#inputOffset').val('');
-      alert(response);
+		//show the result in a alert
+		alert(response);
 	});
 }
 
+//update the user name of a user
 function updateUser(event){
 	// Prevents default HTML functions
 	event.preventDefault();
@@ -253,7 +260,7 @@ function updateUser(event){
 		'user' : $('#updateUser fieldset input#inputUser').val()
 	}
 	
-    // Call the POST with our registration
+    // Use AJAX for POST
     $.ajax({
         type: 'POST',
         data: reqBody,
@@ -265,14 +272,14 @@ function updateUser(event){
 				// Clear the form inputs
                 $('#updateUser fieldset input#inputMacAdress').val('');
 				$('#updateUser fieldset input#inputUser').val('');
-                // Update the table
+                
+				// Update the table
                 populateTable();
             }
+			
+			// If something goes wrong, alert the error message that the service returned
             else {
-                // If something goes wrong, alert the error message that the service returned
                 alert('Error: ' + response.msg);
             }
 	});
-	
 }
-

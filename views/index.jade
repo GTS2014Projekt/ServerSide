@@ -11,7 +11,7 @@ block content
                 thead
                     th MAC-Adresse
                     th Benuzter
-                    th registriert
+                    th Status
                     th TIMESTAMP
                     th löschen
                 tbody
@@ -44,7 +44,7 @@ block content
                 input#inputMacAdress(type='text', placeholder='MAC-Adresse')
                 input#inputBeacons(type='text', placeholder='Beacons')
                 br
-                btnblue#btnUpdateData Daten senden
+                btnblue#btnUpdateData Senden
         // /UPDATE DATA 
         
         // GET DATA
@@ -53,9 +53,9 @@ block content
             fieldset
                 input#inputBeacons(type='text', placeholder='Beacons#Range')
                 input#inputOffset(type='text', placeholder='offset')
-                input#inputRegistered(type='text', placeholder='0/1')
+                input#inputStatus(type='text', placeholder='0/1')
                 br
-                btnblue#btnGetData Daten holen
+                btnblue#btnGetData Senden
         // /Get DATA 
 
     // /WRAPPER
