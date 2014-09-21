@@ -24,7 +24,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
 app.use(express.static(path.join(__dirname, 'public')));
 //route of the favicon
-app.use(favicon(path.join(__dirname, 'public','images','favicon.png')));
+app.use(favicon(path.join(__dirname, 'public','images','favicon.ico')));
 
 // Make db accessible to our router
 app.use(function(req,res,next){
