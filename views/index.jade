@@ -1,7 +1,7 @@
 extends layout
 block content
 
-    img(src="http://localhost:3000/favicon.ico" height="264" width="264" alt="" align="center" hspace="200" vspace="100") 
+    img(src="/public/images/logo.png" height="264" width="264" alt="" align="center" hspace="10" vspace="100") 
     // Wrapper
     #wrapper
 
@@ -22,7 +22,7 @@ block content
         header Benutzernamen setzen
         #updateUser
             fieldset
-                input#inputMacAdress(type='text', placeholder='AA:AA:AA:AA:AA:AA')
+                input#inputMacAdress(type='text', placeholder='MAC-Adresse')
                 input#inputUser(type='text', placeholder='Benutzernamen')
                 btnblue#btnUpdateUser Senden
         // / UPDATE USER

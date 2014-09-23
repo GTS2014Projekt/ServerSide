@@ -206,7 +206,6 @@ router.post('/update', function(req, res) {
 		}
 		for(var i=0; i< splitBeacons.length; i=i+2){
 			//check macAdress Beacons
-			console.log(splitBeacons[i]);
 			if(!checkMacAdress(splitBeacons[i])){
 				res.send({ msg: 'Das ist keine echte MAC-Adresse' });
 				return;

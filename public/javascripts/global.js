@@ -194,6 +194,9 @@ function deleteUser(event) {
 function showbeacons(event) {
     // Prevents default HTML functions
     event.preventDefault();
+	
+	$('#updateUser fieldset input#inputMacAdress').val($(this).attr('rel'));
+	$('#updateData fieldset input#inputMacAdress').val($(this).attr('rel'));
     
     // Empty content string
     var tableContent = '';

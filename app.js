@@ -23,6 +23,7 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/public/images/', express.static(__dirname + '/public/images/'));
 //route of the favicon
 app.use(favicon(path.join(__dirname, 'public','images','favicon.ico')));
 
